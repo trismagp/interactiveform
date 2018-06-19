@@ -76,6 +76,19 @@ label {
 	margin-bottom: .5em;
 }
 
+label[disabled="disabled"] {
+	color: #888;
+}
+
+label.error{
+	color: red;
+}
+
+input.error[type="text"],
+input.error[type="email"]{
+  border-color: red;
+}
+
 input,
 select {
 	margin-bottom: 1.125em;

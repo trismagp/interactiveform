@@ -16,7 +16,6 @@
     </header>
 
     <form action="index.html" method="post">
-
       <fieldset>
         <legend>Basic Info</legend>
 
@@ -54,7 +53,7 @@
         <div>
           <label for="design">Design:</label>
           <select id="design" name="user_design">
-            <option>Select Theme</option>
+            <option hidden="true">Select Theme</option>
             <option value="js puns">Theme - JS Puns</option>
             <option value="heart js">Theme - I &#9829; JS</option>
           </select>
@@ -89,13 +88,14 @@
 
         <label for="payment">I'm going to pay with:</label>
         <select id="payment" name="user_payment">
-          <option value="select_method">Select Payment Method</option>
+          <option hidden="true">Select Payment Method</option>
           <option value="credit card">Credit Card</option>
           <option value="paypal">PayPal</option>
           <option value="bitcoin">Bitcoin</option>
+        <!-- </optgroup> -->
         </select>
 
-        <div id="credit-card" class="credit-card">
+        <div id="credit-card" class="credit-card payment-method">
 
           <div class="col-6 col">
             <label for="cc-num">Card Number:</label>
@@ -137,11 +137,11 @@
           </select>
         </div>
 
-        <div>
+        <div id="paypal" class="payment-method">
         	<p>If you selected the PayPal option we'll take you to Paypal's site to set up your billing information, when you click “Register” below.</p>
         </div>
 
-        <div>
+        <div  id="bitcoin" class="payment-method">
         	<p>If you selected the Bitcoin option we'll take you to the Coinbase site to set up your billing information. Due to the nature of exchanging Bitcoin, all Bitcoin transactions will be final.</p>
         </div>
 
