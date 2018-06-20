@@ -80,13 +80,20 @@ label[disabled="disabled"] {
 	color: #888;
 }
 
-label.error{
+label.error,
+legend.error{
 	color: red;
 }
 
 input.error[type="text"],
 input.error[type="email"]{
   border-color: red;
+}
+
+
+select.error{
+  border-color: red;
+  background-color: red;
 }
 
 input,
