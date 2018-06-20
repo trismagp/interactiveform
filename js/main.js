@@ -48,9 +48,12 @@ function initFormFields(){
 }
 
 function addOnFocusListenerInput(){
-  $("input").on('focus',function(){
+  $("input[type=text]").on('focus',function(){
     removeClassError($(this));
-  })
+  });
+  $("input[type=checkbox]").on('focus',function(){
+    removeClassError($(this));
+  });
 }
 
 function addEventListenerSubmitButton(){
@@ -94,11 +97,27 @@ function checkName(){
   return true;
 }
 
+function mailErrorMessage(emailAddress){
+  if(emailAddress.length === 0){
+    $('#mail').prev().append(' <span class="error"> field cannot be empty</span>');
+  }else{
+    $('#mail').prev().append(' <span class="error"> error incorrect format</span>');
+  }
+}
+
+function removeMailErrorMessage(){
+  $('#mail').prev().find('span').remove();
+}
+
 function checkMail(){
-  if(!isValidEmailAddress($('#mail').val())){
+  const emailAddress = $('#mail').val();
+  removeMailErrorMessage();
+  if(!isValidEmailAddress(emailAddress)){
     setClassError($('#mail'));
+    mailErrorMessage(emailAddress);
     return false;
   }
+  removeClassError($('#mail'));
   return true;
 }
 
@@ -130,6 +149,10 @@ function addEventListenersBasicInfo(){
     }else{
       $('#title-other').remove();
     }
+  });
+
+  $('#mail').on('input',function(){
+    checkMail();
   });
 }
 
@@ -341,6 +364,7 @@ function checkPaymentInfo(){
 }
 
 function initPaymentInfo(){
+  $('#payment option')[1].selected = true;
   $("#paypal").hide();
   $("#bitcoin").hide();
 }
@@ -356,12 +380,10 @@ function addEventListenersPayments(){
   // on focus on any of the input fields of the credit card form
   // "Credit Card" is selected on the payment select
   $('#credit-card input[type="text"]').on('focus',function(){
-    $('#payment option')[1].selected = true;
     removeClassError($('#payment'));
   });
 
   $('#credit-card select').on('click',function(){
-    $('#payment option')[1].selected = true;
     removeClassError($('#exp-year'));
     removeClassError($('#exp-month'));
   });
