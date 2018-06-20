@@ -44,7 +44,8 @@ function initFormFields(){
   });
   $("input[type=text]").each(function(){$(this).val("")});
   $("input[type=email]").each(function(){$(this).val("")});
-  $("input[type=checkbox]").prop('checked', false);
+  $("input[type=checkbox]").prop('checked', false).removeAttr('disabled');
+  $("label").removeAttr('disabled');
 }
 
 function addOnFocusListenerInput(){
@@ -247,8 +248,12 @@ function calcActivitiesTotalCost(activityIsChecked,activityCost){
   return totalActivitiesCost -= activityCost;
 }
 
-function displayActivitiesTotalCost(){
+function removeActivitiesTotalCost(){
   $('.activities p.total-cost').remove();
+}
+
+function displayActivitiesTotalCost(){
+  removeActivitiesTotalCost();
   if(totalActivitiesCost > 0){
     $('.activities label').last().after(`
       <p class="total-cost">Total: $${totalActivitiesCost}</p>
@@ -259,6 +264,10 @@ function displayActivitiesTotalCost(){
 function disableActivity(activity, bool){
   activity.attr('disabled',bool);
   activity.find(">:first-child").attr('disabled',bool);
+}
+
+function initActivitiesInfo(){
+  removeActivitiesTotalCost();
 }
 
 function addEventListenersActivities(){
@@ -401,8 +410,9 @@ function initForm(){
   addEventListenersPayments();
   addEventListenersForm();
 
-  initPaymentInfo();
   initShirtInfo();
+  initActivitiesInfo();
+  initPaymentInfo();
 
   $('#name').focus();
 }
