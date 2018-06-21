@@ -1,5 +1,3 @@
-const selectDesign = document.getElementById('design');
-const selectShirtColor = document.getElementById('color');
 let totalActivitiesCost = 0;
 
 /* =================================
@@ -26,8 +24,6 @@ function setClassError($element){
   if($element.prev().prop('nodeName') === 'LABEL'){
     $element.prev().addClass('error');
   }
-  const $fieldset = getFieldsetParent($($element));
-  $fieldset.children().first().addClass('error');
 }
 
 function removeClassError($element){
@@ -35,7 +31,6 @@ function removeClassError($element){
   if($element.prev().prop('nodeName') === 'LABEL'){
     $element.prev().removeClass('error');
   }
-  removeLegendClassError($element);
 }
 
 function initFormFields(){
@@ -122,6 +117,8 @@ function checkMail(){
   return true;
 }
 
+// if "other" is selected  for "Job Role" and the related input field is empty
+// then error
 function checkTitleOther(){
   if($('#title').val()==="other"){
     if($('#title-other').val()===""){
@@ -142,6 +139,7 @@ function checkBasicInfo(){
 }
 
 function addEventListenersBasicInfo(){
+  // display input field for a job role when "other is selected"
   $('#title').on('change',function(){
     const jobRole = $(this).val();
     if(jobRole === 'other'){
@@ -152,6 +150,7 @@ function addEventListenersBasicInfo(){
     }
   });
 
+  // real time check in mail field
   $('#mail').on('input',function(){
     checkMail();
   });
@@ -168,14 +167,14 @@ function addEventListenersBasicInfo(){
 
 function displayShirtColorOptions(shirtTheme){
   $("#colors-js-puns").show();
-  $(selectShirtColor.options).show();
-  for (var i = 0; i < selectShirtColor.options.length; i++) {
-    if(selectShirtColor.options[i].text.search(shirtTheme) === -1) {
-      $(selectShirtColor.options[i]).hide();
+  $("#color option").show();
+  for (var i = 0; i < $("#color option").length; i++) {
+    if($("#color option")[i].text.search(shirtTheme) === -1) {
+      $($("#color option")[i]).hide();
     }
   }
   // selecting the first visible shirt color option
-  $(selectShirtColor).find("option[style*='block']")[0].selected = true;
+  $("#color").find("option[style*='block']")[0].selected = true;
 }
 
 function initShirtInfo(){
@@ -199,7 +198,7 @@ function addEventListenersShirtInfo(){
 
   $('#design').on('change',function(){
     const shirtDesign = $(this).val();
-    const shirtDesignText = selectDesign.options[selectDesign.selectedIndex].text;
+    const shirtDesignText = $(this).children("option").filter(":selected").text();
     const shirtDesignTextShort = shirtDesignText.replace("Theme - ","");
 
     if(shirtDesign!=="Select Theme"){
@@ -282,7 +281,8 @@ function addEventListenersActivities(){
       const $otherActivity = $(this);
       const otherActivityName = $otherActivity.find(">:first-child").attr('name');
       const otherActivityDayTime = getActivityDayTime($otherActivity.text());
-      // check first if we have different activities and if they have the same schedule
+
+      // check first if activities are different and if they have the same schedule
       if(otherActivityName !== activityName && otherActivityDayTime === activityDayTime){
         if(activityIsChecked){
           disableActivity($otherActivity,true);
@@ -325,18 +325,12 @@ function isValidCCNum($ccnum){
   return hasNumOnly($ccnum) && $ccnum.length >= 13 && $ccnum.length <= 16;
 }
 
+// check if cedit card expiration date is ok
 function isValidExpirationDate($year,$month){
   const expirationDate = new Date($year.val(),$month.val());
   return expirationDate > Date.now();
 }
 
-function checkSelectPayment(){
-  if($('#payment').val() === 'Select Payment Method'){
-    setClassError($('#payment'));
-    return false;
-  }
-  return true;
-}
 
 function checkCreditCardInfo(){
   var isOkCheck = true;
@@ -366,19 +360,19 @@ function checkCreditCardInfo(){
 }
 
 function checkPaymentInfo(){
-  var isOkCheck = true;
-  isOkCheck = checkSelectPayment();
-  isOkCheck = checkCreditCardInfo() && isOkCheck;
-  return isOkCheck;
+  return checkCreditCardInfo();
 }
 
 function initPaymentInfo(){
+  // select "credit card" payment option
   $('#payment option')[1].selected = true;
+  // hides paypal and bitcoin payment sections
   $("#paypal").hide();
   $("#bitcoin").hide();
 }
 
 function addEventListenersPayments(){
+  // display the good payment section on payment select change
   $('#payment').on('change',function(){
     const paymentMethod = $(this).val().replace(' ','-');
     $('.payment-method').hide();
@@ -392,6 +386,7 @@ function addEventListenersPayments(){
     removeClassError($('#payment'));
   });
 
+  // on month or year select click removes the error class on both
   $('#credit-card select').on('click',function(){
     removeClassError($('#exp-year'));
     removeClassError($('#exp-month'));
@@ -402,18 +397,22 @@ function addEventListenersPayments(){
 ==================================== */
 
 function initForm(){
+  // init the entire form
   initFormFields();
 
+  // add all listeners
   addEventListenersBasicInfo();
   addEventListenersShirtInfo();
   addEventListenersActivities();
   addEventListenersPayments();
   addEventListenersForm();
 
+  // init fieldsets
   initShirtInfo();
   initActivitiesInfo();
   initPaymentInfo();
 
+  // focus on name input field
   $('#name').focus();
 }
 
