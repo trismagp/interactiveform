@@ -33,6 +33,16 @@ function removeClassError($element){
   }
 }
 
+function showSnackbar(message){
+  $('body').append(`<div id='snackbar'>${message}</div>`);
+  $('#snackbar').addClass('show');
+  setTimeout(function(){
+    $('#snackbar').removeClass('show');
+    $('#snackbar').remove();
+  }, 3000);
+}
+
+
 function initFormFields(){
   $("select").each(function(){
     $(this).find("option")[0].selected = true;
@@ -40,14 +50,17 @@ function initFormFields(){
   $("input[type=text]").each(function(){$(this).val("")});
   $("input[type=email]").each(function(){$(this).val("")});
   $("input[type=checkbox]").prop('checked', false).removeAttr('disabled');
+
   $("label").removeAttr('disabled');
 }
 
 function addOnFocusListenerInput(){
-  $("input[type=text]").on('focus',function(){
+  $("input[type=text]").on('focus',function(event){
+    event.preventDefault();
     removeClassError($(this));
   });
-  $("input[type=checkbox]").on('focus',function(){
+  $("input[type=checkbox]").on('focus',function(event){
+    event.preventDefault();
     removeClassError($(this));
   });
 }
@@ -63,10 +76,10 @@ function addEventListenerSubmitButton(){
     isOkCheck = checkPaymentInfo() && isOkCheck;
 
     if(isOkCheck){
-      alert("You've been registered");
       initForm();
+      showSnackbar("You've been registered");
     }else{
-      alert("Please check error(s)");
+      showSnackbar("Please check errors");
     }
   });
 }
@@ -95,9 +108,9 @@ function checkName(){
 
 function mailErrorMessage(emailAddress){
   if(emailAddress.length === 0){
-    $('#mail').prev().append(' <span class="error"> field cannot be empty</span>');
+    $('#mail').prev().append(' <span id="mail-error" class="error"> field cannot be empty</span>');
   }else{
-    $('#mail').prev().append(' <span class="error"> error incorrect format</span>');
+    $('#mail').prev().append(' <span id="mail-error" class="error"> error incorrect format</span>');
   }
 }
 
@@ -129,6 +142,11 @@ function checkTitleOther(){
   return true;
 }
 
+function initBasicInfo(){
+  $('#title-other').remove();
+}
+
+
 function checkBasicInfo(){
   var isOkCheck = true;
   isOkCheck = checkName();
@@ -139,11 +157,17 @@ function checkBasicInfo(){
 }
 
 function addEventListenersBasicInfo(){
-  // display input field for a job role when "other is selected"
-  $('#title').on('change',function(){
+  // display input field for a job role when "other" is selected
+  $('#title').on('change',function(event){
+
+    event.preventDefault();
+
+    // prevents form firing twice the event listener
+    event.stopImmediatePropagation();
+
     const jobRole = $(this).val();
     if(jobRole === 'other'){
-        $('fieldset').eq(0).append(`<input type="text" id="title-other" placeholder="Your job role"></input`);
+        $('#title').after(`<input type="text" id="title-other" placeholder="Your job role"></input`);
         addOnFocusListenerInput();
     }else{
       $('#title-other').remove();
@@ -253,6 +277,7 @@ function removeActivitiesTotalCost(){
 
 function displayActivitiesTotalCost(){
   removeActivitiesTotalCost();
+
   if(totalActivitiesCost > 0){
     $('.activities label').last().after(`
       <p class="total-cost">Total: $${totalActivitiesCost}</p>
@@ -270,7 +295,8 @@ function initActivitiesInfo(){
 }
 
 function addEventListenersActivities(){
-  $('.activities input[type=checkbox]').on('change',function(){
+  $('.activities input[type=checkbox]').on('change',function(e){
+    e.stopImmediatePropagation();
     const activityText =  $(this).parent().text();
     const activityName = $(this).attr('name');
     const activityIsChecked = $(this)[0].checked;
@@ -307,7 +333,8 @@ function addEventListenersActivities(){
 ==================================== */
 
 function hasNumOnly(val){
-  return /^\d+$/.test(val);
+  var reg = new RegExp('^[0-9]+$');
+  return reg.test(val);
 }
 
 // must contain only numbers and length equal to 5
@@ -325,30 +352,45 @@ function isValidCCNum($ccnum){
   return hasNumOnly($ccnum) && $ccnum.length >= 13 && $ccnum.length <= 16;
 }
 
+
 // check if cedit card expiration date is ok
 function isValidExpirationDate($year,$month){
   const expirationDate = new Date($year.val(),$month.val());
   return expirationDate > Date.now();
 }
 
+function checkCreditCardInputField($element, minLength, maxLength){
+  $element.prev().find('span').remove();
+  if(!hasNumOnly($element.val())){
+    $element.prev().append("<span class='error'> num only</span>");
+    setClassError($element);
+    return false;
+  }
+
+  if($element.val().length < minLength){
+    $element.prev().append("<span class='error'> too short</span>");
+    setClassError($element);
+    return false;
+  }
+
+  if($element.val().length > maxLength){
+    $element.prev().append("<span class='error'> too long</span>");
+    setClassError($element);
+    return false;
+  }
+
+  removeClassError($element);
+  return true;
+
+}
 
 function checkCreditCardInfo(){
   var isOkCheck = true;
   if($('#payment').val() === 'credit card'){
-    if(!isValidZipCode($('#zip').val())){
-      setClassError($('#zip'));
-      isOkCheck = false;
-    }
 
-    if(!isValidCVV($('#cvv').val())){
-      setClassError($('#cvv'));
-      isOkCheck = false;
-    }
-
-    if(!isValidCCNum($('#cc-num').val())){
-      setClassError($('#cc-num'));
-      isOkCheck = false;
-    }
+    isOkCheck = checkCreditCardInputField($('#cc-num'),13,16) && isOkCheck;
+    isOkCheck = checkCreditCardInputField($('#zip'),5,5) && isOkCheck;
+    isOkCheck = checkCreditCardInputField($('#cvv'),3,3) && isOkCheck;
 
     if(!isValidExpirationDate($('#exp-year'),$('#exp-month'))){
       setClassError($('#exp-year'));
@@ -360,45 +402,98 @@ function checkCreditCardInfo(){
 }
 
 function checkPaymentInfo(){
-  return checkCreditCardInfo();
+  if($('#payment').val() === 'credit card'){
+    return checkCreditCardInfo();
+  }
+  return true;
 }
 
 function initPaymentInfo(){
   // select "credit card" payment option
   $('#payment option')[1].selected = true;
+
+
+  $("#credit-card").show();
+  $("#credit-card input").each(function(){removeClassError($(this))});
+  $("#credit-card select").each(function(){removeClassError($(this))});
+
   // hides paypal and bitcoin payment sections
   $("#paypal").hide();
   $("#bitcoin").hide();
 }
 
+function paymentErrorMessage(emailAddress){
+  if(emailAddress.length === 0){
+    $('#mail').prev().append(' <span id="mail-error" class="error"> field cannot be empty</span>');
+  }else{
+    $('#mail').prev().append(' <span id="mail-error" class="error"> error incorrect format</span>');
+  }
+}
+
 function addEventListenersPayments(){
   // display the good payment section on payment select change
-  $('#payment').on('change',function(){
+  $('#payment').on('change',function(event){
+    event.preventDefault();
     const paymentMethod = $(this).val().replace(' ','-');
     $('.payment-method').hide();
-      $(`#${paymentMethod}`).show();
-      removeClassError($('#payment'));
+    $(`#${paymentMethod}`).show();
+    removeClassError($('#payment'));
   });
 
   // on focus on any of the input fields of the credit card form
   // "Credit Card" is selected on the payment select
-  $('#credit-card input[type="text"]').on('focus',function(){
+  $('#credit-card input[type="text"]').on('focus',function(event){
+    event.preventDefault();
+    $(this).prev().find('span').remove();
     removeClassError($('#payment'));
   });
 
   // on month or year select click removes the error class on both
-  $('#credit-card select').on('click',function(){
+  $('#credit-card select').on('click',function(event){
+    event.preventDefault();
     removeClassError($('#exp-year'));
     removeClassError($('#exp-month'));
   });
+
+  // real time check in credit card num field
+  $('#cc-num').on('input',function(event){
+    event.preventDefault();
+    checkCcNum($('#cc-num'),13,16);
+  });
+
+  // real time check in credit card num field
+  $('#zip').on('input',function(event){
+    event.preventDefault();
+    checkCcNum($('#zip'),5,5);
+  });
+
+  // real time check in credit card num field
+  $('#cvv').on('input',function(event){
+    event.preventDefault();
+    checkCcNum($('#cvv'),3,3);
+  });
+
 }
 /* =================================
   Payments info end
 ==================================== */
 
+
 function initForm(){
+
+  totalActivitiesCost = 0;
+
   // init the entire form
   initFormFields();
+
+
+  // init fieldsets
+  initBasicInfo();
+  initShirtInfo();
+  initActivitiesInfo();
+  initPaymentInfo();
+
+
 
   // add all listeners
   addEventListenersBasicInfo();
@@ -407,10 +502,7 @@ function initForm(){
   addEventListenersPayments();
   addEventListenersForm();
 
-  // init fieldsets
-  initShirtInfo();
-  initActivitiesInfo();
-  initPaymentInfo();
+
 
   // focus on name input field
   $('#name').focus();
