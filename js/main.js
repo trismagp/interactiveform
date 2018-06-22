@@ -33,6 +33,14 @@ function removeClassError($element){
   }
 }
 
+function displayErrorMessage($element,message){
+  $($element).prev().append(` <span id="mail-error" class="error"> ${message}</span>`);
+}
+
+function removeErrorMessage($element){
+  $($element).prev().find('span').remove();
+}
+
 function showSnackbar(message){
   $('body').append(`<div id='snackbar'>${message}</div>`);
   $('#snackbar').addClass('show');
@@ -108,19 +116,15 @@ function checkName(){
 
 function mailErrorMessage(emailAddress){
   if(emailAddress.length === 0){
-    $('#mail').prev().append(' <span id="mail-error" class="error"> field cannot be empty</span>');
+    displayErrorMessage($('#mail'),"field cannot be empty");
   }else{
-    $('#mail').prev().append(' <span id="mail-error" class="error"> error incorrect format</span>');
+    displayErrorMessage($('#mail'),"incorrect mail format");
   }
-}
-
-function removeMailErrorMessage(){
-  $('#mail').prev().find('span').remove();
 }
 
 function checkMail(){
   const emailAddress = $('#mail').val();
-  removeMailErrorMessage();
+  removeErrorMessage($('#mail'));
   if(!isValidEmailAddress(emailAddress)){
     setClassError($('#mail'));
     mailErrorMessage(emailAddress);
@@ -143,7 +147,8 @@ function checkTitleOther(){
 }
 
 function initBasicInfo(){
-  $('#title-other').remove();
+  $('#title-other').hide();
+  removeClassError($('#title-other'));
 }
 
 
@@ -167,10 +172,10 @@ function addEventListenersBasicInfo(){
 
     const jobRole = $(this).val();
     if(jobRole === 'other'){
-        $('#title').after(`<input type="text" id="title-other" placeholder="Your job role"></input`);
+        $('#title-other').show();
         addOnFocusListenerInput();
     }else{
-      $('#title-other').remove();
+      $('#title-other').hide();
     }
   });
 
@@ -337,44 +342,40 @@ function hasNumOnly(val){
   return reg.test(val);
 }
 
-// must contain only numbers and length equal to 5
-function isValidZipCode($zipCode){
-  return hasNumOnly($zipCode) && $zipCode.length === 5;
-}
-
-// must contain only numbers and length equal to 3
-function isValidCVV($cvv){
-  return hasNumOnly($cvv) && $cvv.length === 3;
-}
-
-// must contain only numbers and length in [13,16]
-function isValidCCNum($ccnum){
-  return hasNumOnly($ccnum) && $ccnum.length >= 13 && $ccnum.length <= 16;
-}
-
-
 // check if cedit card expiration date is ok
 function isValidExpirationDate($year,$month){
   const expirationDate = new Date($year.val(),$month.val());
   return expirationDate > Date.now();
 }
 
+function lengthErrorMessage(len, minLength, maxLength){
+  var message = `Len ${len} of ${minLength}`;
+  if(minLength!==maxLength){
+    message += `-${maxLength}`;
+  }
+  return message;
+}
+
 function checkCreditCardInputField($element, minLength, maxLength){
-  $element.prev().find('span').remove();
-  if(!hasNumOnly($element.val())){
-    $element.prev().append("<span class='error'> num only</span>");
+
+  removeErrorMessage($element);
+  const elementVal = $element.val();
+  const elementLen = elementVal.length;
+
+  if(elementLen === 0){
+    displayErrorMessage($element,"cannot be empty");
     setClassError($element);
     return false;
   }
 
-  if($element.val().length < minLength){
-    $element.prev().append("<span class='error'> too short</span>");
+  if(!hasNumOnly(elementVal)){
+    displayErrorMessage($element,"num only");
     setClassError($element);
     return false;
   }
 
-  if($element.val().length > maxLength){
-    $element.prev().append("<span class='error'> too long</span>");
+  if(elementLen < minLength || elementLen > maxLength){
+    displayErrorMessage($element,lengthErrorMessage(elementLen,minLength,maxLength));
     setClassError($element);
     return false;
   }
@@ -422,13 +423,6 @@ function initPaymentInfo(){
   $("#bitcoin").hide();
 }
 
-function paymentErrorMessage(emailAddress){
-  if(emailAddress.length === 0){
-    $('#mail').prev().append(' <span id="mail-error" class="error"> field cannot be empty</span>');
-  }else{
-    $('#mail').prev().append(' <span id="mail-error" class="error"> error incorrect format</span>');
-  }
-}
 
 function addEventListenersPayments(){
   // display the good payment section on payment select change
@@ -458,19 +452,19 @@ function addEventListenersPayments(){
   // real time check in credit card num field
   $('#cc-num').on('input',function(event){
     event.preventDefault();
-    checkCcNum($('#cc-num'),13,16);
+    checkCreditCardInputField($('#cc-num'),13,16);
   });
 
-  // real time check in credit card num field
+  // real time check in zip num field
   $('#zip').on('input',function(event){
     event.preventDefault();
-    checkCcNum($('#zip'),5,5);
+    checkCreditCardInputField($('#zip'),5,5);
   });
 
-  // real time check in credit card num field
+  // real time check in cvv num field
   $('#cvv').on('input',function(event){
     event.preventDefault();
-    checkCcNum($('#cvv'),3,3);
+    checkCreditCardInputField($('#cvv'),3,3);
   });
 
 }
