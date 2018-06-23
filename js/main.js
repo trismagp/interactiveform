@@ -75,6 +75,7 @@ function addOnFocusListenerInput(){
 
 function addEventListenerSubmitButton(){
   $("button[type=submit]").on('click',function(event){
+    event.stopImmediatePropagation();
     event.preventDefault();
 
     var isOkCheck = true;
@@ -116,7 +117,7 @@ function checkName(){
 
 function mailErrorMessage(emailAddress){
   if(emailAddress.length === 0){
-    displayErrorMessage($('#mail'),"field cannot be empty");
+    displayErrorMessage($('#mail'),"empty");
   }else{
     displayErrorMessage($('#mail'),"incorrect mail format");
   }
@@ -296,12 +297,15 @@ function disableActivity(activity, bool){
 }
 
 function initActivitiesInfo(){
+  removeClassError($('#activities-legend'));
   removeActivitiesTotalCost();
 }
 
 function addEventListenersActivities(){
-  $('.activities input[type=checkbox]').on('change',function(e){
-    e.stopImmediatePropagation();
+  $('.activities input[type=checkbox]').on('change',function(event){
+    event.stopImmediatePropagation();
+    event.preventDefault();
+
     const activityText =  $(this).parent().text();
     const activityName = $(this).attr('name');
     const activityIsChecked = $(this)[0].checked;
@@ -363,7 +367,7 @@ function checkCreditCardInputField($element, minLength, maxLength){
   const elementLen = elementVal.length;
 
   if(elementLen === 0){
-    displayErrorMessage($element,"cannot be empty");
+    displayErrorMessage($element,"empty");
     setClassError($element);
     return false;
   }
